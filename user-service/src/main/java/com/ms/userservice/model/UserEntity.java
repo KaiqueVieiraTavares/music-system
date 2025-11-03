@@ -1,5 +1,6 @@
-package com.ms.userservice.entity;
+package com.ms.userservice.model;
 
+import com.ms.userservice.model.enums.Role;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -35,7 +36,8 @@ public class UserEntity {
     private LocalDateTime createdAt;
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
-
+    @Enumerated(EnumType.STRING)
+    private Role role;
     @PrePersist
     private void preInsert(){
         this.createdAt = LocalDateTime.now();

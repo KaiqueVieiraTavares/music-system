@@ -25,4 +25,11 @@ public class HandleRestControllerAdvice {
         exception.setProperty("timestamp", Instant.now());
         return exception;
     }
+    @ExceptionHandler(EmailNotFoundException.class)
+    public ProblemDetail handleEmailNotFound(EmailNotFoundException e){
+        var exception = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, e.getMessage());
+        exception.setTitle("Email not found");
+        exception.setProperty("timestamp", Instant.now());
+        return exception;
+    }
 }

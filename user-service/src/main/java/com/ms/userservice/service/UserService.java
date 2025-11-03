@@ -1,14 +1,13 @@
 package com.ms.userservice.service;
 
-import com.ms.userservice.dtos.CreateUserDTO;
+import com.ms.userservice.dtos.UpdateUserDTO;
 import com.ms.userservice.dtos.UserResponseDTO;
-import com.ms.userservice.entity.UserEntity;
-import com.ms.userservice.exceptions.EmailAlreadyExistsException;
 import com.ms.userservice.exceptions.UserNotFoundException;
 import com.ms.userservice.repository.UserRepository;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -20,19 +19,21 @@ public class UserService {
         this.userRepository = userRepository;
         this.modelMapper = modelMapper;
     }
-
-    public UserResponseDTO createUser(CreateUserDTO createUserDTO){
-        if(userRepository.existsByEmail(createUserDTO.email())){
-            throw new EmailAlreadyExistsException("Email: " + createUserDTO.email() + " already exists");
-        }
-        var savedUserEntity =  userRepository.save(modelMapper.map(createUserDTO, UserEntity.class));
-        return modelMapper.map(savedUserEntity, UserResponseDTO.class);
-    }
     public UserResponseDTO getUser(UUID userID){
         var user = userRepository.findById(userID).orElseThrow(() -> new UserNotFoundException("User with id: " + userID + " not found"));
         return modelMapper.map(user, UserResponseDTO.class);
     }
-    public UserResponseDTO deleteUser(UUID userId){
+    public List<UserResponseDTO> getAllUsers(){
+        return userRepository.findAll().stream().map(user -> modelMapper.map(user, UserResponseDTO.class)).toList();
+    }
+    public void deleteUser(UUID userId){
         var user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException("User with id: " + userId + " not found"));
+        userRepository.delete(user);
+    }
+    public UserResponseDTO updateUser(UUID userId, UpdateUserDTO updateUserDTO){
+        var user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException("User with id: " + userId + " not found"));
+        modelMapper.map(updateUserDTO, user);
+        var savedUser = userRepository.save(user);
+        return modelMapper.map(savedUser, UserResponseDTO.class);
     }
 }
