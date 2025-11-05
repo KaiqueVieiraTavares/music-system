@@ -20,8 +20,6 @@ public record CreateMusicDTO(
         @NotNull(message = "A data de lançamento é obrigatória")
         LocalDate releaseDate,
 
-        @NotNull(message = "O ID do artista é obrigatório")
-        UUID artistId,
 
         @NotBlank(message = "O nome do álbum é obrigatório")
         String album,
