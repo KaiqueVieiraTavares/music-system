@@ -3,6 +3,7 @@ package com.ms.musicservice.service;
 import com.ms.musicservice.dtos.CreateMusicDTO;
 import com.ms.musicservice.dtos.MusicResponseDTO;
 import com.ms.musicservice.dtos.UpdateMusicDTO;
+import com.ms.musicservice.exceptions.MusicAlreadyExistsException;
 import com.ms.musicservice.exceptions.MusicNotFoundException;
 import com.ms.musicservice.model.MusicEntity;
 import com.ms.musicservice.repository.MusicRepository;
@@ -21,6 +22,9 @@ public class MusicService {
         this.modelMapper = modelMapper;
     }
     public MusicResponseDTO createMusic(UUID artistId, CreateMusicDTO createMusicDTO){
+        if(musicRepository.existsByTitleAndArtistId(createMusicDTO.title(), artistId)){
+            throw new MusicAlreadyExistsException("A music with the title: " + createMusicDTO.title() + " already exists for this artist");
+        }
         var musicEntity = modelMapper.map(createMusicDTO, MusicEntity.class);
         musicEntity.setArtistId(artistId);
         return modelMapper.map(musicRepository.save(musicEntity), MusicResponseDTO.class);

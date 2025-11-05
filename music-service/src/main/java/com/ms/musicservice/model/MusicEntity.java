@@ -16,7 +16,9 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Table(name = "musics")
+@Table(name = "musics", uniqueConstraints = {
+        @UniqueConstraint(name = "uk_music_title_artist", columnNames = {"title", "artist_id"})
+})
 public class MusicEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -32,7 +34,7 @@ public class MusicEntity {
     private String album;
     @Column(name = "duration_in_seconds")
     private Integer durationInSeconds;
-    @Column(name = "created_at")
+    @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
     @PrePersist
