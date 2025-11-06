@@ -1,6 +1,7 @@
 package com.ms.userservice.security;
 
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -17,7 +18,7 @@ public class TokenService {
     private final SecretKey key;
 
     public TokenService(@Value("${secret.jwt}")String secret) {
-        this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+        this.key = Keys.hmacShaKeyFor(Decoders.BASE64URL.decode(secret));
     }
     public String generateToken(UserDetails userDetails){
         return Jwts.builder().subject(userDetails.getUsername()).issuedAt(Date.from(Instant.now())).expiration(Date.from(Instant.now().plus(3, ChronoUnit.HOURS)))
