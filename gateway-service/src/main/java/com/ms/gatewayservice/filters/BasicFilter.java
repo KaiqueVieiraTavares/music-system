@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
@@ -18,13 +19,15 @@ import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
 import javax.crypto.SecretKey;
+import java.util.List;
 
 @Component
+@Order(0)
 public class BasicFilter implements GlobalFilter {
 
     private final SecretKey key;
     private static final Logger logger = LoggerFactory.getLogger(BasicFilter.class);
-
+    private static final List<String> permittedRoutes = List.of("/auth/register", "/auth/login");
     public BasicFilter(@Value("${api.secret}") String secret) {
         this.key = Keys.hmacShaKeyFor(Decoders.BASE64.decode(secret));
     }
@@ -32,7 +35,10 @@ public class BasicFilter implements GlobalFilter {
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         String path = exchange.getRequest().getURI().getPath();
-
+        if(permittedRoutes.stream().anyMatch(permittedRoutes -> permittedRoutes.equals(path))){
+            logger.trace("Rota permitida, pulando autenticaçao: {}", path);
+            return chain.filter(exchange);
+        }
         try {
             String token = extractToken(exchange);
 
