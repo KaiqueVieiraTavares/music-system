@@ -1,0 +1,21 @@
+# Este é o application.yml do API GATEWAY
+
+spring:
+  application:
+    # O Gateway também é um cliente do Eureka, para poder consultar a "lista telefônica"
+    name: gateway-service
+  cloud:
+    gateway:
+      routes:
+        # REGRA 1: Se a URL começar com /api/v1/songs/...
+        - id: song_service_route
+          # ...então, consulte o Eureka (lb=Load Balancer) e envie para o "SONG-SERVICE"
+          uri: lb://SONG-SERVICE
+          predicates:
+            - Path=/api/v1/songs/**
+
+# Configuração para o Gateway encontrar o Eureka
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
