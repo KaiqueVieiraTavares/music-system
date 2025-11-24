@@ -1,0 +1,5 @@
+com\ms\dtos\MusicEventDTO.class
+com\ms\dtos\ArtistDTO.class
+com\ms\dtos\EventAction.class
+com\ms\dtos\MusicPayloadDTO.class
+com\ms\App.class

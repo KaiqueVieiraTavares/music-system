@@ -6,6 +6,7 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
+        <module name="shared-service" />
         <module name="gateway-service" />
       </profile>
       <profile name="Annotation profile for search-service" enabled="true">
@@ -15,8 +16,8 @@
         <processorPath useClasspath="false">
           <entry name="$USER_HOME$/.m2/repository/org/projectlombok/lombok/1.18.42/lombok-1.18.42.jar" />
         </processorPath>
-        <module name="music-service" />
         <module name="artist-service" />
+        <module name="music-service" />
         <module name="user-service" />
         <module name="search-service" />
       </profile>

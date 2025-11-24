@@ -1,20 +1,100 @@
-# Este é o application.yml do API GATEWAY
-
 spring:
   application:
-    # O Gateway também é um cliente do Eureka, para poder consultar a "lista telefônica"
     name: gateway-service
   cloud:
     gateway:
       routes:
-        # REGRA 1: Se a URL começar com /api/v1/songs/...
-        - id: song_service_route
-          # ...então, consulte o Eureka (lb=Load Balancer) e envie para o "SONG-SERVICE"
-          uri: lb://SONG-SERVICE
+        #music-service
+        - id: music_service_get
+          uri: lb://MUSIC-SERVICE
           predicates:
-            - Path=/api/v1/songs/**
+            - Path=/api/v1/musics/**
+            - Method=GET
+          filters:
+            - name: RequestRateLimiter
+              args:
+                &readLimits
+                redis-rate-limiter.replenishRate: 10
+                redis-rate-limiter.burstCapacity: 20
+                redis-rate-limiter.requestedTokens: 1
+                key-resolver: "#{@userKeyResolver}"
 
-# Configuração para o Gateway encontrar o Eureka
+            - name: InjectArtistId
+        - id: music_service_write
+          uri: lb://MUSIC-SERVICE
+          predicates:
+            - path=/api/v1/musics/**
+            - Method=POST, PUT, DELETE
+          filters:
+            - name: RequestRateLimiter
+              args:
+                &writeLimits
+                redis-rate-limiter.replenishRate: 2
+                redis-rate-limiter.burstCapacity: 2
+                redis-rate-limiter.requestedTokens: 1
+                key-resolver: "#{@userKeyResolver}"
+
+                # user-service
+        - id: user_service_get
+          uri: lb://USER-SERVICE
+          predicates:
+            - path=/api/v1/users/**
+            - method=GET
+          filters:
+            - name: RequestRateLimiter
+              args:
+                *readLimits
+        - id: user_service_write
+          uri: lb://USER_SERVICE
+          predicates:
+            - path=/api/v1/users/**
+            - method= POST, PUT, DELETE
+          filters:
+            - name: RequestRateLimiter
+              args:
+                *writeLimits
+
+              #artist-service
+        - id: artist_service_get
+          uri: lb://ARTIST-SERVICE
+          predicates:
+            - path=/api/v1/artists/**
+            - method= GET
+          filters:
+            - name: RequestRateLimiter
+              args:
+                *readLimits
+        - id: artist_service_write
+          uri: lb://ARTIST-SERVICE
+          predicates:
+            - path=/api/v1/artists/**
+            - method= POST,PUT,DELETE
+          filters:
+            - name: RequestRateLimiter
+              args:
+                *writeLimits
+
+              #search-service
+        - id: search_service
+          uri: lb://SEARCH-SERVICE
+          predicates:
+            - path=/api/v1/search/**
+          filters:
+            - name: RequestRateLimiter
+              args:
+              #api de busca tem um limite maior de operações
+                *readLimits
+
+
+
+
+
+
+
+
+
+
+
 eureka:
   client:
     service-url:

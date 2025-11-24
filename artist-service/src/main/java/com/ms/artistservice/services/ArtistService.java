@@ -6,6 +6,7 @@ import com.ms.artistservice.dtos.UpdateArtistDTO;
 import com.ms.artistservice.exceptions.ArtistNotFoundException;
 import com.ms.artistservice.model.ArtistEntity;
 import com.ms.artistservice.repositories.ArtistRepository;
+import com.ms.dtos.ArtistDTO;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
@@ -42,5 +43,10 @@ public class ArtistService {
         var artist = artistRepository.findById(artistId).orElseThrow(() -> new ArtistNotFoundException("Artist with id: " + artistId + " not found"));
         modelMapper.map(updateArtistDTO, artist);
         return modelMapper.map(artistRepository.save(artist), ArtistResponseDTO.class);
+    }
+    // chamadas internas
+    public ArtistDTO getArtistForInternal(UUID artistId){
+        var artist = artistRepository.findById(artistId).orElseThrow(() -> new ArtistNotFoundException("Artist with id: " + artistId + " not found!"));
+        return modelMapper.map(artist, ArtistDTO.class);
     }
 }
