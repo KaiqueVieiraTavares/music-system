@@ -45,7 +45,7 @@ spring:
               args:
                 *readLimits
         - id: user_service_write
-          uri: lb://USER_SERVICE
+          uri: lb://USER-SERVICE
           predicates:
             - path=/api/v1/users/**
             - method= POST, PUT, DELETE
