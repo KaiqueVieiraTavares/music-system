@@ -1,10 +1,10 @@
 package com.ms.musicservice.service;
 
-import com.ms.dtos.ArtistDTO;
+
 import com.ms.dtos.EventAction;
 import com.ms.dtos.MusicEventDTO;
 import com.ms.dtos.MusicPayloadDTO;
-import com.ms.musicservice.client.ArtistClient;
+
 import com.ms.musicservice.dtos.CreateMusicDTO;
 import com.ms.musicservice.dtos.MusicResponseDTO;
 import com.ms.musicservice.dtos.UpdateMusicDTO;
@@ -13,31 +13,36 @@ import com.ms.musicservice.exceptions.MusicNotFoundException;
 import com.ms.musicservice.messaging.MusicProducer;
 import com.ms.musicservice.model.MusicEntity;
 import com.ms.musicservice.repository.MusicRepository;
+import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.List;
+
 import java.util.UUID;
 
 
+
 @Service
+@RequiredArgsConstructor
 public class MusicService {
     private final MusicRepository musicRepository;
     private final ModelMapper modelMapper;
-    private final ArtistClient artistClient;
     private final MusicProducer musicProducer;
     private static final Logger logger = LoggerFactory.getLogger(MusicService.class);
-    public MusicService(MusicRepository musicRepository, ModelMapper modelMapper, ArtistClient artistClient, MusicProducer musicProducer) {
-        this.musicRepository = musicRepository;
-        this.modelMapper = modelMapper;
-        this.artistClient = artistClient;
-        this.musicProducer = musicProducer;
-    }
+    public static final String CACHE_MUSIC="music";
+    private static final String CACHE_MUSIC_LIST= "musicList";
+
     @Transactional
+    @CacheEvict(value = CACHE_MUSIC_LIST, allEntries = true)
     public MusicResponseDTO createMusic(UUID artistId, CreateMusicDTO createMusicDTO){
         logger.info("creating a music. ArtistId: {} | Title: {}", artistId, createMusicDTO.title());
         if(musicRepository.existsByTitleAndArtistId(createMusicDTO.title(), artistId)){
@@ -55,17 +60,23 @@ public class MusicService {
         return modelMapper.map(savedMusic, MusicResponseDTO.class);
     }
     @Transactional(readOnly = true)
+    @Cacheable(value = CACHE_MUSIC, key = "#musicId")
     public MusicResponseDTO getMusic(UUID musicId){
         logger.info("get music with id: {}", musicId);
         var music = findMusicOrThrow(musicId);
         return modelMapper.map(music, MusicResponseDTO.class);
     }
+    @Cacheable(value = CACHE_MUSIC_LIST, key = "'page: ' + #pageable.pageNumber + ':size:' + #pageable.pageSize")
     @Transactional(readOnly = true)
-    public List<MusicResponseDTO> getAllMusics(){
+    public Page<MusicResponseDTO> getAllMusics(Pageable pageable){
         logger.info("get all musics");
-        return musicRepository.findAll().stream().map(musicEntity -> modelMapper.map(musicEntity, MusicResponseDTO.class)).toList();
+        return musicRepository.findAll(pageable).map(musicEntity -> modelMapper.map(musicEntity, MusicResponseDTO.class));
     }
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = CACHE_MUSIC, key = "#musicId"),
+            @CacheEvict(value = CACHE_MUSIC_LIST, allEntries = true)
+    })
     public void deleteMusic(UUID musicId){
         logger.info("deleting an music with id: {}", musicId);
         var music = findMusicOrThrow(musicId);
@@ -77,6 +88,10 @@ public class MusicService {
         createMusicEventDto(EventAction.DELETED, musicPayloadDTO);
     }
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = CACHE_MUSIC, key = "#musicId"),
+            @CacheEvict(value = CACHE_MUSIC_LIST, allEntries = true)
+    })
     public MusicResponseDTO updateMusic(UUID musicId, UpdateMusicDTO updateMusicDTO){
         logger.info("updating a music with id: {}", musicId);
         var music = findMusicOrThrow(musicId);
@@ -94,18 +109,9 @@ public class MusicService {
     private MusicEntity findMusicOrThrow(UUID musicId){
         return musicRepository.findById(musicId).orElseThrow(() -> new MusicNotFoundException("Music with id: " + musicId + " not found"));
     }
+
     private void createMusicEventDto(EventAction eventAction, MusicPayloadDTO musicPayloadDTO){
-        String artistName = null;
-        if(eventAction!=EventAction.DELETED){
-            try{
-                ArtistDTO artistDTO = artistClient.findArtistBydArtistId(musicPayloadDTO.artistId());
-                 artistName = artistDTO.name();
-            } catch (Exception e) {
-                logger.warn("The artist's name could not be found: {}", e.getMessage());
-                artistName = "Unknown Artist";
-            }
-        }
-        MusicEventDTO eventDTO = new MusicEventDTO(eventAction, musicPayloadDTO, artistName, LocalDateTime.now());
+        MusicEventDTO eventDTO = new MusicEventDTO(eventAction, musicPayloadDTO, LocalDateTime.now());
         musicProducer.handleMusicEvent(eventDTO);
     }
 }

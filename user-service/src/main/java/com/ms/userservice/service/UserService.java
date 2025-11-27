@@ -10,6 +10,8 @@ import org.modelmapper.ModelMapper;
 
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.slf4j.Logger;
@@ -34,11 +36,11 @@ public class UserService {
         var user = findByIdOrThrow(userId);
         return modelMapper.map(user, UserResponseDTO.class);
     }
-    @Cacheable( value = CACHE_USERS_LIST, key = "'allUsers'")
+    @Cacheable( value = CACHE_USERS_LIST, key = "'page' + #pageable.pageNumber + ':size:' + #pageable.pageSize")
     @Transactional(readOnly = true)
-    public List<UserResponseDTO> getAllUsers(){
+    public Page<UserResponseDTO> getAllUsers(Pageable pageable){
         logger.info("get all users");
-        return userRepository.findAll().stream().map(user -> modelMapper.map(user, UserResponseDTO.class)).toList();
+        return userRepository.findAll(pageable).map(user -> modelMapper.map(user, UserResponseDTO.class));
     }
     @Caching(evict = {
             @CacheEvict(value = CACHE_USERS, key = "#userId"),
