@@ -6,7 +6,7 @@ import com.ms.artistservice.dtos.UpdateArtistDTO;
 import com.ms.artistservice.exceptions.ArtistNotFoundException;
 import com.ms.artistservice.model.ArtistEntity;
 import com.ms.artistservice.repositories.ArtistRepository;
-import com.ms.dtos.ArtistDTO;
+import com.ms.dtos.artist.ArtistDTO;
 
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
@@ -18,7 +18,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.UUID;
 
 @Service

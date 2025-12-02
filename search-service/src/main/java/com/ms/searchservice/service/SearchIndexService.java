@@ -1,6 +1,6 @@
 package com.ms.searchservice.service;
 
-import com.ms.dtos.MusicEventDTO;
+import com.ms.dtos.music.MusicEventDTO;
 import com.ms.searchservice.document.SearchIndexDocument;
 import com.ms.searchservice.dtos.ArtistSearchResponseDTO;
 import com.ms.searchservice.dtos.MusicSearchResponseDTO;

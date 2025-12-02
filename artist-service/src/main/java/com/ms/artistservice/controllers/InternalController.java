@@ -1,7 +1,7 @@
 package com.ms.artistservice.controllers;
 
 import com.ms.artistservice.services.ArtistService;
-import com.ms.dtos.ArtistDTO;
+import com.ms.dtos.artist.ArtistDTO;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;

@@ -1,7 +1,8 @@
-package com.ms.dtos;
+package com.ms.dtos.music;
+
+import com.ms.dtos.EventAction;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 
 public record MusicEventDTO(

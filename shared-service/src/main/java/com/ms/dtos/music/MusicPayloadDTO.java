@@ -1,4 +1,4 @@
-package com.ms.dtos;
+package com.ms.dtos.music;
 
 import java.util.UUID;
 

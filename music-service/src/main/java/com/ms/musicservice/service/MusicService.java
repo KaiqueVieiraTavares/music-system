@@ -2,8 +2,8 @@ package com.ms.musicservice.service;
 
 
 import com.ms.dtos.EventAction;
-import com.ms.dtos.MusicEventDTO;
-import com.ms.dtos.MusicPayloadDTO;
+import com.ms.dtos.music.MusicEventDTO;
+import com.ms.dtos.music.MusicPayloadDTO;
 
 import com.ms.musicservice.dtos.CreateMusicDTO;
 import com.ms.musicservice.dtos.MusicResponseDTO;

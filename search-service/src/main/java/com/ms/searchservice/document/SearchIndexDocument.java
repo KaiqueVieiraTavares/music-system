@@ -23,6 +23,7 @@ public class SearchIndexDocument {
     private String songTitle;
     @Field(type = FieldType.Text)
     private String lyrics;
+    @Field(type = FieldType.Keyword)
     private UUID artistId;
     private String artistName;
     @Field(type = FieldType.Keyword)

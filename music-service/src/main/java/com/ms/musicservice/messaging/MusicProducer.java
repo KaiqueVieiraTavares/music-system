@@ -1,5 +1,5 @@
 package com.ms.musicservice.messaging;
-import com.ms.dtos.MusicEventDTO;
+import com.ms.dtos.music.MusicEventDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;

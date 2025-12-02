@@ -24,12 +24,10 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<UserResponseDTO> registerUser(@Valid @RequestBody CreateUserDTO createUserDTO){
-        var userResponse = authService.createUser(createUserDTO);
-        return ResponseEntity.status(HttpStatus.CREATED).body(userResponse);
+        return ResponseEntity.status(HttpStatus.CREATED).body(authService.createUser(createUserDTO));
     }
     @PostMapping("/login")
     public ResponseEntity<AuthResponseDto> loginUser(@Valid @RequestBody LoginUserDto loginUserDto){
-        var userResponse = authService.loginUser(loginUserDto);
-        return ResponseEntity.ok(userResponse);
+        return ResponseEntity.ok(authService.loginUser(loginUserDto));
     }
 }

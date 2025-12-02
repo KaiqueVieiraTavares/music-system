@@ -1,6 +1,6 @@
 package com.ms.searchservice.messaging;
 
-import com.ms.dtos.MusicEventDTO;
+import com.ms.dtos.music.MusicEventDTO;
 import com.ms.searchservice.service.SearchIndexService;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;

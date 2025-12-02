@@ -24,7 +24,4 @@ public class TokenService {
         return Jwts.builder().subject(userDetails.getUsername()).issuedAt(Date.from(Instant.now())).expiration(Date.from(Instant.now().plus(3, ChronoUnit.HOURS)))
                 .signWith(key).compact();
     }
-    public String verifyAndExtractEmailToken(String token){
-        return Jwts.parser().verifyWith(key).build().parseSignedClaims(token).getPayload().getSubject();
-    }
 }

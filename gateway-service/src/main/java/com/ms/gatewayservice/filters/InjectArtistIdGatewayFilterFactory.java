@@ -23,6 +23,7 @@ public class InjectArtistIdGatewayFilterFactory extends AbstractGatewayFilterFac
         this.artistService = artistService;
     }
 
+    //filtro para injetar artist-id no header
     @Override
     public GatewayFilter apply(Config config) {
         return (exchange, chain) -> {
@@ -30,7 +31,7 @@ public class InjectArtistIdGatewayFilterFactory extends AbstractGatewayFilterFac
             String userId = exchange.getRequest().getHeaders().getFirst("X-User-Id");
             if (userId == null) {
                 logger.warn("X-User-Id header missing. BasicFilter should have been executed.");
-                return unauthorized(exchange, "X-User-Id header missing", HttpStatus.FORBIDDEN);
+                return unauthorized(exchange, HttpStatus.FORBIDDEN);
             }
 
 
@@ -46,7 +47,7 @@ public class InjectArtistIdGatewayFilterFactory extends AbstractGatewayFilterFac
                     })
                     .switchIfEmpty(Mono.defer(() -> {
                         logger.warn("No artist ID found for userId: {}", userId);
-                        return unauthorized(exchange, "Artist ID not associated with this user", HttpStatus.FORBIDDEN);
+                        return unauthorized(exchange, HttpStatus.FORBIDDEN);
                     }));
         };
     }
@@ -56,7 +57,7 @@ public class InjectArtistIdGatewayFilterFactory extends AbstractGatewayFilterFac
 
     }
 
-    private Mono<Void> unauthorized(ServerWebExchange exchange, String message, HttpStatus status) {
+    private Mono<Void> unauthorized(ServerWebExchange exchange, HttpStatus status) {
         ServerHttpResponse response = exchange.getResponse();
         response.setStatusCode(status);
         return response.setComplete();

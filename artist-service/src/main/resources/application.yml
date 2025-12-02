@@ -1,0 +1,13 @@
+spring:
+  application:
+    name: artist-service
+  kafka:
+    producer:
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      retries: 3
+      acks: all
+      properties:
+        enable.idempotence: true
+        enable.timeout.ms: 120000
+        retry.backoff.ms: 1000
