@@ -13,23 +13,20 @@ public class HandleRestControllerAdvice {
 
     @ExceptionHandler(EmailAlreadyExistsException.class)
     public ProblemDetail handleEmailAlreadyExists(EmailAlreadyExistsException e){
-        var exception = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, e.getMessage());
-        exception.setTitle("Email already exists");
-        exception.setProperty("timestamp", Instant.now());
-        return exception;
+        return buildProblem(HttpStatus.CONFLICT, "Email already exists", e.getMessage());
     }
     @ExceptionHandler(UserNotFoundException.class)
     public ProblemDetail handleUserNotFound(UserNotFoundException e){
-        var exception = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, e.getMessage());
-        exception.setTitle("User not found");
-        exception.setProperty("timestamp", Instant.now());
-        return exception;
+        return buildProblem(HttpStatus.NOT_FOUND, "User not found", e.getMessage());
     }
     @ExceptionHandler(EmailNotFoundException.class)
     public ProblemDetail handleEmailNotFound(EmailNotFoundException e){
-        var exception = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, e.getMessage());
-        exception.setTitle("Email not found");
-        exception.setProperty("timestamp", Instant.now());
-        return exception;
+        return buildProblem(HttpStatus.NOT_FOUND,"Email not found", e.getMessage());
+    }
+    private ProblemDetail buildProblem(HttpStatus status, String title, String detail){
+        var problem = ProblemDetail.forStatusAndDetail(status, detail);
+        problem.setTitle(title);
+        problem.setProperty("timestamp", Instant.now());
+        return problem;
     }
 }
