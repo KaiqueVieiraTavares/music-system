@@ -6,13 +6,10 @@ import com.ms.artistservice.dtos.UpdateArtistDTO;
 import com.ms.artistservice.exceptions.ArtistNotFoundException;
 import com.ms.artistservice.model.ArtistEntity;
 import com.ms.artistservice.repositories.ArtistRepository;
-import com.ms.dtos.artist.ArtistDTO;
-
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
-import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -25,55 +22,84 @@ import java.util.UUID;
 public class ArtistService {
     private final ModelMapper modelMapper;
     private final ArtistRepository artistRepository;
+    private final CacheManager cacheManager; // Injetado para controle preciso dos caches
+
     public static final String CACHE_ARTIST = "artists";
     public static final String CACHE_ARTIST_LIST = "artistsList";
+    public static final String CACHE_ARTIST_BY_USER = "artistByUserId";
     private static final String KEY_ALL_ARTISTS = "'AllArtists'";
-    @Transactional()
-    @CacheEvict(value = CACHE_ARTIST_LIST, key = KEY_ALL_ARTISTS)
-    public ArtistResponseDTO createArtist(CreateArtistDTO createArtistDTO){
-        var savedUser = artistRepository.save(modelMapper.map(createArtistDTO, ArtistEntity.class));
-        return modelMapper.map(savedUser, ArtistResponseDTO.class);
+
+    @Transactional
+    public ArtistResponseDTO createArtist(UUID userId, CreateArtistDTO createArtistDTO) {
+        ArtistEntity artist = modelMapper.map(createArtistDTO, ArtistEntity.class);
+        artist.setUserId(userId);
+
+        var savedArtist = artistRepository.save(artist);
+
+        // Limpa a lista pública pois um novo artista entrou no sistema
+        clearCacheEntry(CACHE_ARTIST_LIST, KEY_ALL_ARTISTS);
+
+        // TODO: Disparar evento para o Kafka
+
+        return modelMapper.map(savedArtist, ArtistResponseDTO.class);
     }
+
     @Transactional(readOnly = true)
     @Cacheable(value = CACHE_ARTIST, key = "#artistId")
     public ArtistResponseDTO getArtist(UUID artistId){
-        var artist = findArtistOrThrow(artistId);
+        var artist = artistRepository.findById(artistId)
+                .orElseThrow(() -> new ArtistNotFoundException("Artist with id: " + artistId + " not found"));
         return modelMapper.map(artist, ArtistResponseDTO.class);
     }
+
     @Transactional(readOnly = true)
-    @Cacheable(value = CACHE_ARTIST_LIST, key = "'page' + #pageable.pageNumber + ':size:' + #pageable.pageSize")
+    @Cacheable(value = CACHE_ARTIST_LIST, key = "'page:' + #pageable.pageNumber + ':size:' + #pageable.pageSize")
     public Page<ArtistResponseDTO> getAllArtists(Pageable pageable){
         return artistRepository.findAll(pageable).map(artist -> modelMapper.map(artist, ArtistResponseDTO.class));
     }
+
     @Transactional
-    @Caching(evict = {
-            @CacheEvict(value = CACHE_ARTIST, key = "#artistId"),
-            @CacheEvict(value = CACHE_ARTIST_LIST, key = "'AllArtists'")
-    })
-    public void deleteArtist(UUID artistId){
-        var artist = findArtistOrThrow(artistId);
+    public void deleteArtist(UUID userId){
+        // SEGURANÇA: Busca pelo userId do Token, impossibilitando deletar outros artistas
+        var artist = artistRepository.findByUserId(userId)
+                .orElseThrow(() -> new ArtistNotFoundException("Artist not found for this user."));
+
         artistRepository.delete(artist);
-    }
-    @Transactional
-    @Caching(evict = {
-            @CacheEvict(value = CACHE_ARTIST, key = "#artistId"),
-            @CacheEvict(value = CACHE_ARTIST_LIST, key = KEY_ALL_ARTISTS)
-    })
-    public ArtistResponseDTO updateArtist(UUID artistId, UpdateArtistDTO updateArtistDTO){
-        var artist = findArtistOrThrow(artistId);
-        modelMapper.map(updateArtistDTO, artist);
-        return modelMapper.map(artistRepository.save(artist), ArtistResponseDTO.class);
-    }
-    // chamadas internas
-    @Transactional(readOnly = true)
-    @Cacheable(value = CACHE_ARTIST, key = "#artistId")
-    public ArtistDTO getArtistForInternal(UUID artistId){
-        var artist = findArtistOrThrow(artistId);
-        return modelMapper.map(artist, ArtistDTO.class);
+
+        clearCacheEntry(CACHE_ARTIST, artist.getId());
+        clearCacheEntry(CACHE_ARTIST_BY_USER, userId);
+        clearCacheEntry(CACHE_ARTIST_LIST, KEY_ALL_ARTISTS);
     }
 
-    //auxiliar
-    private ArtistEntity findArtistOrThrow(UUID artistId){
-        return artistRepository.findById(artistId).orElseThrow(() -> new ArtistNotFoundException("Artist with id: " + artistId + " not found"));
+    @Transactional
+    public ArtistResponseDTO updateArtist(UUID userId, UpdateArtistDTO updateArtistDTO) {
+        var artist = artistRepository.findByUserId(userId)
+                .orElseThrow(() -> new ArtistNotFoundException("Artist not found for this user."));
+
+        modelMapper.map(updateArtistDTO, artist);
+        var updatedArtist = artistRepository.save(artist);
+
+        // Limpa os caches para forçar a atualização na próxima leitura
+        clearCacheEntry(CACHE_ARTIST, updatedArtist.getId());
+        clearCacheEntry(CACHE_ARTIST_BY_USER, userId);
+        clearCacheEntry(CACHE_ARTIST_LIST, KEY_ALL_ARTISTS);
+
+        return modelMapper.map(updatedArtist, ArtistResponseDTO.class);
+    }
+
+    @Transactional(readOnly = true)
+    @Cacheable(value = CACHE_ARTIST_BY_USER, key = "#userId")
+    public UUID findArtistIdByUserId(UUID userId) {
+        return artistRepository.findByUserId(userId)
+                .map(ArtistEntity::getId)
+                .orElseThrow(() -> new ArtistNotFoundException("No artist found for user: " + userId));
+    }
+
+    // Método auxiliar seguro para limpar entradas de cache sem estourar NullPointerException
+    private void clearCacheEntry(String cacheName, Object key) {
+        var cache = cacheManager.getCache(cacheName);
+        if (cache != null) {
+            cache.evict(key);
+        }
     }
 }

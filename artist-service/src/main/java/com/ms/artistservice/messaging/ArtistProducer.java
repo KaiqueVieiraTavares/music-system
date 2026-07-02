@@ -19,7 +19,7 @@ public class ArtistProducer {
         var eventMessage = new ArtistEventMessage(eventAction, artistDTO);
         var key = artistDTO.id().toString();
 
-        kafkaTemplate.send("artist-events",key,eventMessage )
+        kafkaTemplate.send(TOPIC,key,eventMessage )
                 .whenComplete((result, throwable )-> {
                     if(throwable==null){
                         logger.info("Message sent successfully! topic : {}, partition: {}, offset: {}",

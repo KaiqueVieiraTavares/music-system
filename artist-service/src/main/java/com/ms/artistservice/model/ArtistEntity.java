@@ -24,6 +24,8 @@ public class ArtistEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
+    @Column(name = "user_id")
+    private UUID userId;
     @Column(nullable = false)
     private String name;
     @Column(name = "stage_name", nullable = false)
