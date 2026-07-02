@@ -24,8 +24,8 @@ import java.util.UUID;
 public class MusicController {
     private final MusicService musicService;
     @PostMapping()
-    public ResponseEntity<MusicResponseDTO> createMusic(@RequestHeader("X-User-Id") UUID artistId, @Valid @RequestBody CreateMusicDTO createMusicDTO) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(musicService.createMusic(artistId, createMusicDTO));
+    public ResponseEntity<MusicResponseDTO> createMusic(@RequestHeader("X-User-Id") UUID userId, @Valid @RequestBody CreateMusicDTO createMusicDTO) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(musicService.createMusic(userId, createMusicDTO));
     }
 
     @GetMapping("/{musicId}")
@@ -37,12 +37,12 @@ public class MusicController {
         return ResponseEntity.ok(musicService.getAllMusics(pageable));
     }
     @DeleteMapping("/{musicId}")
-    public ResponseEntity<Void> deleteMusic(@PathVariable UUID musicId){
-        musicService.deleteMusic(musicId);
+    public ResponseEntity<Void> deleteMusic(@RequestHeader("X-User-Id") UUID userId, @PathVariable UUID musicId){
+        musicService.deleteMusic(userId, musicId);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
     @PutMapping("/{musicId}")
-    public ResponseEntity<MusicResponseDTO> updateMusic(@PathVariable UUID musicId,@Valid @RequestBody UpdateMusicDTO updateMusicDTO){
-        return ResponseEntity.ok( musicService.updateMusic(musicId, updateMusicDTO));
+    public ResponseEntity<MusicResponseDTO> updateMusic(@RequestHeader("X-User-Id") UUID userId, @PathVariable UUID musicId,@Valid @RequestBody UpdateMusicDTO updateMusicDTO){
+        return ResponseEntity.ok( musicService.updateMusic(userId, musicId, updateMusicDTO));
     }
 }
