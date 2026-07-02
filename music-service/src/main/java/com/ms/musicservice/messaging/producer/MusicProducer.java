@@ -1,7 +1,7 @@
 package com.ms.musicservice.messaging;
+
 import com.ms.dtos.music.MusicEventDTO;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
@@ -9,9 +9,10 @@ import org.springframework.stereotype.Service;
 
 import java.util.concurrent.CompletableFuture;
 
+@Slf4j
 @Service
 public class MusicProducer {
-    private static final Logger logger = LoggerFactory.getLogger(MusicProducer.class);
+
     private final KafkaTemplate<String, MusicEventDTO> kafkaTemplate;
 
     @Value("${spring.kafka.topic.music-events}")
@@ -25,11 +26,11 @@ public class MusicProducer {
         CompletableFuture<SendResult<String, MusicEventDTO>> future = kafkaTemplate.send(topicName, key, musicEventDTO);
         future.whenComplete(((stringMusicEventDTOSendResult, throwable) -> {
             if(throwable == null){
-                logger.info("Message sent successfully!");
-                logger.info("Topic: {}, Partition: {}, Offset: {}", stringMusicEventDTOSendResult.getRecordMetadata().topic(),
+                log.info("Message sent successfully!");
+                log.info("Topic: {}, Partition: {}, Offset: {}", stringMusicEventDTOSendResult.getRecordMetadata().topic(),
                         stringMusicEventDTOSendResult.getRecordMetadata().partition(), stringMusicEventDTOSendResult.getRecordMetadata().offset());
             } else{
-               logger.warn("Problem to send message! error: {}", throwable.getMessage());
+                log.warn("Problem to send message! error: {}", throwable.getMessage());
             }
         }));
     }
