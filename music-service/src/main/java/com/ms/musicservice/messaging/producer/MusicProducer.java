@@ -1,4 +1,4 @@
-package com.ms.musicservice.messaging;
+package com.ms.musicservice.messaging.producer;
 
 import com.ms.dtos.music.MusicEventDTO;
 import lombok.extern.slf4j.Slf4j;
